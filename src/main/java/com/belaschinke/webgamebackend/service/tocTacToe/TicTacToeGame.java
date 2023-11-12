@@ -1,5 +1,6 @@
 package com.belaschinke.webgamebackend.service.tocTacToe;
 
+import com.belaschinke.webgamebackend.entity.Player;
 import com.belaschinke.webgamebackend.service.GameInterface;
 import com.belaschinke.webgamebackend.service.messageProtocol.TurnRequest;
 import com.belaschinke.webgamebackend.service.messageProtocol.TurnResponse;
@@ -14,15 +15,15 @@ public class TicTacToeGame implements GameInterface {
     private int[][] board;
     private int turn;
     private int winner;
-    private long player1Id;
-    private long player2Id;
+    private Player player1;
+    private Player player2;
 
-    public TicTacToeGame(long player1Id, long player2Id) {
+    public TicTacToeGame(Player player1, Player player2) {
         board = new int[3][3];
         turn = new Random().nextInt(2) + 1;
         winner = 0;
-        this.player1Id = player1Id;
-        this.player2Id = player2Id;
+        this.player1 = player1;
+        this.player2 = player2;
     }
 
     public void play(int x, int y, TurnResponse turnResponse) {
@@ -86,7 +87,7 @@ public class TicTacToeGame implements GameInterface {
     public TurnResponse handleTurn(TurnRequest turnRequest) {
         TurnResponse turnResponse = new TurnResponse();
         turnResponse.setValid(false);
-        int playerNumber = turnRequest.getPlayerId() == player1Id ? 1 : 2;
+        int playerNumber = turnRequest.getPlayerId() == player1.getId() ? 1 : 2;
         //game ended
         if (winner != 0) {
             turnResponse.setErrorMsg("Game already finished!");
@@ -96,7 +97,7 @@ public class TicTacToeGame implements GameInterface {
             return turnResponse;
         }
         //player not in game
-        if (turnRequest.getPlayerId() != player1Id && turnRequest.getPlayerId() != player2Id) {
+        if (turnRequest.getPlayerId() != player1.getId() && turnRequest.getPlayerId() != player2.getId()) {
             turnResponse.setErrorMsg("Player not in this game!");
             return turnResponse;
         }
