@@ -11,8 +11,9 @@ import com.belaschinke.webgamebackend.service.tocTacToe.TicTacToeGame;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+
 @Service
-public class WebgameService {
+public class WebgameService<T extends GameInterface> {
 
     @Autowired
     private PlayerRepository playerRepository;
@@ -21,7 +22,7 @@ public class WebgameService {
     private PlayerAuthService playerAuthService;
 
     @Autowired
-    private Lobby lobby;
+    private Lobby<T> lobby;
 
 
     public InitialResponse handleInitialRequest(InitialRequest initialRequest) {
@@ -66,7 +67,7 @@ public class WebgameService {
             return turnResponse;
         }
         //get game of player
-        TicTacToeGame game = lobby.getGame(turnRequest.getPlayerId());
+        T game = lobby.getGame(turnRequest.getPlayerId());
         //nullgame
         if (game == null) {
             //send error message

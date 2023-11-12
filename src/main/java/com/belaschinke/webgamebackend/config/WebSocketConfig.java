@@ -1,6 +1,8 @@
 package com.belaschinke.webgamebackend.config;
 
-import com.belaschinke.webgamebackend.service.TicTacToeMessageHandler;
+import com.belaschinke.webgamebackend.service.GameMessageHandler;
+import com.belaschinke.webgamebackend.service.tocTacToe.Lobby;
+import com.belaschinke.webgamebackend.service.tocTacToe.TicTacToeGame;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.WebSocketHandler;
@@ -18,8 +20,12 @@ public class WebSocketConfig implements WebSocketConfigurer {
     }
 
     @Bean
-    public WebSocketHandler ticTacToeHandler() {
-        return new TicTacToeMessageHandler();
+    public GameMessageHandler<TicTacToeGame> ticTacToeHandler() {
+        return new GameMessageHandler();
     }
 
+    @Bean
+    public Class<TicTacToeGame> ticTacToeGameClass() {
+        return TicTacToeGame.class;
+    }
 }

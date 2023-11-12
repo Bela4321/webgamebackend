@@ -1,5 +1,6 @@
 package com.belaschinke.webgamebackend.service.tocTacToe;
 
+import com.belaschinke.webgamebackend.service.GameInterface;
 import com.belaschinke.webgamebackend.service.messageProtocol.TurnRequest;
 import com.belaschinke.webgamebackend.service.messageProtocol.TurnResponse;
 import lombok.Getter;
@@ -9,7 +10,7 @@ import java.util.Random;
 
 @Getter
 @Setter
-public class TicTacToeGame {
+public class TicTacToeGame implements GameInterface {
     private int[][] board;
     private int turn;
     private int winner;

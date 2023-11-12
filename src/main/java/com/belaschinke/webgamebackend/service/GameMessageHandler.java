@@ -6,10 +6,10 @@ import com.belaschinke.webgamebackend.service.messageProtocol.TurnResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.socket.*;
 
-public class TicTacToeMessageHandler implements WebSocketHandler {
+public class GameMessageHandler<T extends GameInterface> implements WebSocketHandler {
 
     @Autowired
-    WebgameService webgameService;
+    WebgameService<T> webgameService;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -47,7 +47,7 @@ public class TicTacToeMessageHandler implements WebSocketHandler {
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
-
+        //todo: remove player from lobby
     }
 
     @Override

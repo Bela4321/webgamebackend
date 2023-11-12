@@ -1,5 +1,6 @@
 package com.belaschinke.webgamebackend.service.tocTacToe;
 
+import com.belaschinke.webgamebackend.service.GameInterface;
 import com.belaschinke.webgamebackend.service.messageProtocol.InitialResponse;
 import org.springframework.stereotype.Service;
 
@@ -7,10 +8,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Service
-public class Lobby {
-    private Map<Long, TicTacToeGame> roomGameMap = new HashMap<>();
+public class Lobby<T extends GameInterface> {
+    private Map<Long, T> roomGameMap = new HashMap<>();
     private Map<Long, Long> playerRoomMap = new HashMap<>();
-    private long gameIdCounter = 0;
+
+    private Class<T> gameType;
+
+    public Lobby(Class<T> gameType) {
+        this.gameType = gameType;
+    }
+
 
     public InitialResponse addPlayerToRoom(long playerId, long roomId) {
         InitialResponse initialResponse = new InitialResponse();
@@ -43,7 +50,7 @@ public class Lobby {
         playerRoomMap.remove(playerId);
     }
 
-    public TicTacToeGame getGame(long playerId) {
+    public T getGame(long playerId) {
         Long roomId = playerRoomMap.get(playerId);
         if (roomId == null) {
             //todo: error handling
@@ -53,7 +60,12 @@ public class Lobby {
     }
 
     public void createGame(long playerId, long partnerId, long roomId) {
-        TicTacToeGame game = new TicTacToeGame( partnerId,playerId);
-        roomGameMap.put(roomId, game);
+        T game = null;
+        try {
+            game = gameType.getDeclaredConstructor(long.class, long.class).newInstance(playerId, partnerId);
+            roomGameMap.put(roomId, game);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
