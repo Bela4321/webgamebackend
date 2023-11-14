@@ -8,7 +8,8 @@ import java.util.Map;
 @Data
 @ToString
 public class GameStartResponse {
-    private int roomId;
+    private final String MSG_NAME = "GameStartResponse";
+    private long roomId;
 
     //game-specific Data
     private long player1Id;

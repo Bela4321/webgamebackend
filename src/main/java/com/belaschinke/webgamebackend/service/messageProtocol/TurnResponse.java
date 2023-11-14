@@ -6,6 +6,7 @@ import lombok.ToString;
 @Data
 @ToString
 public class TurnResponse {
+    private final String MSG_NAME = "TurnResponse";
     private String ErrorMsg;
     private boolean wrongTurn;
     private boolean valid;

@@ -3,7 +3,7 @@ package com.belaschinke.webgamebackend.service.messageProtocol;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
 
-@Component
+
 @Getter
 public class MessageSorter {
 

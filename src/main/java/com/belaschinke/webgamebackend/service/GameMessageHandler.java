@@ -18,23 +18,21 @@ public class GameMessageHandler<T extends GameInterface> implements WebSocketHan
 
     @Override
     public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) throws Exception {
+        //prep Message
         if (!(message.getPayload() instanceof String)) {
             throw new Exception("Invalid message type!");
         }
         String payload = (String) message.getPayload();
         MessageSorter messageSorter = new MessageSorter();
         messageSorter.sortMessage(payload);
+
         //depending on type, call different methods
         if (messageSorter.getInitialRequest() != null) {
             //call initial request method
-            InitialResponse response = webgameService.handleInitialRequest(messageSorter.getInitialRequest());
-            //send response
-            session.sendMessage(new TextMessage(response.toString()));
+            webgameService.handleInitialRequest(messageSorter.getInitialRequest(), session);
         } else if (messageSorter.getTurnRequest() != null) {
             //call turn request method
-            TurnResponse response = webgameService.handleTurnRequest(messageSorter.getTurnRequest());
-            //send response
-            session.sendMessage(new TextMessage(response.toString()));
+            webgameService.handleTurnRequest(messageSorter.getTurnRequest(), session);
         } else {
             throw new Exception("Invalid message type!");
         }
@@ -48,6 +46,7 @@ public class GameMessageHandler<T extends GameInterface> implements WebSocketHan
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
         //todo: remove player from lobby
+        webgameService.removePlayerFromLobby(session);
     }
 
     @Override

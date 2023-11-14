@@ -20,7 +20,11 @@ public class PlayerAuthService {
     }
 
     public boolean authenticate(long playerID, String authToken) {
-        return playerAuthMap.get(playerID).equals(authToken);
+        try {
+            return playerAuthMap.get(playerID).equals(authToken);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private String generateAuthToken() {

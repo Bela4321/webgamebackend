@@ -2,14 +2,11 @@ package com.belaschinke.webgamebackend.service;
 
 import com.belaschinke.webgamebackend.entity.Player;
 import com.belaschinke.webgamebackend.repositories.PlayerRepository;
-import com.belaschinke.webgamebackend.service.messageProtocol.InitialRequest;
-import com.belaschinke.webgamebackend.service.messageProtocol.InitialResponse;
-import com.belaschinke.webgamebackend.service.messageProtocol.TurnRequest;
-import com.belaschinke.webgamebackend.service.messageProtocol.TurnResponse;
-import com.belaschinke.webgamebackend.service.tocTacToe.Lobby;
-import com.belaschinke.webgamebackend.service.tocTacToe.TicTacToeGame;
+import com.belaschinke.webgamebackend.service.messageProtocol.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
 
 
 @Service
@@ -25,8 +22,9 @@ public class WebgameService<T extends GameInterface> {
     private Lobby<T> lobby;
 
 
-    public InitialResponse handleInitialRequest(InitialRequest initialRequest) {
+    public void handleInitialRequest(InitialRequest initialRequest, WebSocketSession session)  {
         Player player = getPlayer(initialRequest.getNickname());
+        player.setWebSocketSession(session);
         //check if player exists, else new player
 
         //is player already active?
@@ -35,15 +33,24 @@ public class WebgameService<T extends GameInterface> {
             InitialResponse initialResponse = new InitialResponse();
             initialResponse.setErrorMsg("Player with that nickname already active!");
             initialResponse.setPlayerId(player.getId());
-            return initialResponse;
+            //send response
+            player.sendMessage(initialResponse);
+            return ;
         }
 
         //give player auth token for the session
         String authToken = playerAuthService.addPlayer(player);
         //add player to lobby
-        InitialResponse initialResponse = lobby.addPlayerToRoom(player.getId(), initialRequest.getRoomId());
-        initialResponse.setAuthToken(authToken);
-        return initialResponse;
+        InitialResponseGameStartWrapper initialResponseGameStartWrapper = lobby.addPlayerToRoom(player, initialRequest.getRoomId());
+        initialResponseGameStartWrapper.getInitialResponse().setAuthToken(authToken);
+        //send response
+        player.sendMessage(initialResponseGameStartWrapper.getInitialResponse());
+        //send game start responses
+        if (initialResponseGameStartWrapper.getGameStartResponse() != null) {
+            player.sendMessage(initialResponseGameStartWrapper.getGameStartResponse());
+            Player partner = lobby.getPartner(player.getId());
+            partner.sendMessage(initialResponseGameStartWrapper.getGameStartResponse());
+        }
     }
 
     private Player getPlayer(String nickname) {
@@ -57,15 +64,26 @@ public class WebgameService<T extends GameInterface> {
         return player;
     }
 
-    public TurnResponse handleTurnRequest(TurnRequest turnRequest) {
+    public void handleTurnRequest(TurnRequest turnRequest, WebSocketSession session) {
         //authenticate player
         if (!playerAuthService.authenticate(turnRequest.getPlayerId(), turnRequest.getAuthToken())) {
             //send error message
             TurnResponse turnResponse = new TurnResponse();
             turnResponse.setErrorMsg("Authentication failed!");
             turnResponse.setValid(false);
-            return turnResponse;
+            //send response
+            try{
+                session.sendMessage(new TextMessage(turnResponse.toString()));
+            } catch (Exception e) {
+                System.out.println("Error sending message to player: " + turnRequest.getPlayerId());
+            }
+            return ;
         }
+
+        //get Player
+        Player player = playerRepository.findById(turnRequest.getPlayerId());
+        player.setWebSocketSession(session);
+
         //get game of player
         T game = lobby.getGame(turnRequest.getPlayerId());
         //nullgame
@@ -74,10 +92,33 @@ public class WebgameService<T extends GameInterface> {
             TurnResponse turnResponse = new TurnResponse();
             turnResponse.setErrorMsg("No game found!");
             turnResponse.setValid(false);
-            return turnResponse;
+            player.sendMessage(turnResponse);
+            return ;
         }
-        TurnResponse turnResponse = game.handleTurn(turnRequest);
+        //get partner
+        Player partner = lobby.getPartner(turnRequest.getPlayerId());
+        //nullpartner
+        if (partner == null) {
+            //send error message
+            TurnResponse turnResponse = new TurnResponse();
+            turnResponse.setErrorMsg("partner abandoned!");
+            turnResponse.setValid(false);
+            player.sendMessage(turnResponse);
+        }
+        TurnResponseUpdateWrapper turnResponseUpdateWrapper = game.handleTurn(turnRequest);
+        player.sendMessage(turnResponseUpdateWrapper.getTurnResponse());
+        if (turnResponseUpdateWrapper.getGameUpdateResponse() != null) {
+            partner.sendMessage(turnResponseUpdateWrapper.getGameUpdateResponse());
+        }
+    }
 
-        return turnResponse;
+    public void removePlayerFromLobby(WebSocketSession session) {
+        //find playerId
+        long playerId = lobby.getPlayerIdBySession(session);
+        if (playerId == -1) {
+            System.out.println("Error removing player from lobby: Player not found!");
+            return;
+        }
+        lobby.removePlayerFromRoom(playerId);
     }
 }

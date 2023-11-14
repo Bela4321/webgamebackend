@@ -1,13 +1,17 @@
-package com.belaschinke.webgamebackend.service.tocTacToe;
+package com.belaschinke.webgamebackend.service;
 
 import com.belaschinke.webgamebackend.entity.Player;
 import com.belaschinke.webgamebackend.service.GameInterface;
+import com.belaschinke.webgamebackend.service.messageProtocol.GameStartResponse;
 import com.belaschinke.webgamebackend.service.messageProtocol.InitialResponse;
+import com.belaschinke.webgamebackend.service.messageProtocol.InitialResponseGameStartWrapper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.socket.WebSocketSession;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Random;
 
 @Service
 public class Lobby<T extends GameInterface> {
@@ -21,7 +25,7 @@ public class Lobby<T extends GameInterface> {
     }
 
 
-    public InitialResponse addPlayerToRoom(Player player, long roomId) {
+    public InitialResponseGameStartWrapper addPlayerToRoom(Player player, long roomId) {
         InitialResponse initialResponse = new InitialResponse();
         initialResponse.setPlayerId(player.getId());
         initialResponse.setRoomId(roomId);
@@ -30,18 +34,27 @@ public class Lobby<T extends GameInterface> {
         if (partners.length >=2) {
             //already full
             initialResponse.setErrorMsg("Room already full!");
-            return initialResponse;
+            return new InitialResponseGameStartWrapper(initialResponse, null);
         }
         //add player to room
         playerRoomMap.put(player, roomId);
         if (partners.length == 0) {
             initialResponse.setSuccessMsg("Room created!");
-            return initialResponse;
+            return new InitialResponseGameStartWrapper(initialResponse, null);
         }
         //1 partner-> game can start
         createGame(player, partners[0], roomId);
         initialResponse.setSuccessMsg("Room joined!");
-        return initialResponse;
+
+        GameStartResponse gameStartResponse = new GameStartResponse();
+        gameStartResponse.setRoomId(roomId);
+        gameStartResponse.setPlayer1Id(player.getId());
+        gameStartResponse.setPlayer2Id(partners[0].getId());
+        gameStartResponse.setPlayer1Nickname(player.getNickname());
+        gameStartResponse.setPlayer2Nickname(partners[0].getNickname());
+        gameStartResponse.setPlayer1Turn(roomGameMap.get(roomId).getTurn() == 1);
+
+        return new InitialResponseGameStartWrapper(initialResponse, gameStartResponse);
     }
 
     public boolean isActive(Long playerId) {
@@ -63,9 +76,8 @@ public class Lobby<T extends GameInterface> {
     }
 
     public T getGame(long playerId) {
-        Long roomId = playerRoomMap.get(playerId);
+        Long roomId = playerRoomMap.entrySet().stream().filter(entry -> entry.getKey().getId() == playerId).map(Map.Entry::getValue).findFirst().orElse(null);
         if (roomId == null) {
-            //todo: error handling
             return null;
         }
         return roomGameMap.get(roomId);
@@ -79,5 +91,26 @@ public class Lobby<T extends GameInterface> {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public Player getPartner(long playerId) {
+        Long roomId = playerRoomMap.entrySet().stream().filter(entry -> entry.getKey().getId() == playerId).map(Map.Entry::getValue).findFirst().orElse(null);
+        if (roomId == null) {
+            return null;
+        }
+        Player[] partners = playerRoomMap.entrySet().stream().filter(entry -> entry.getValue() == roomId).map(Map.Entry::getKey).toArray(Player[]::new);
+        if (partners.length != 2) {
+            return null;
+        }
+        return partners[0].getId() == playerId ? partners[1] : partners[0];
+    }
+
+    public long getPlayerIdBySession(WebSocketSession session) {
+        for (Player player : playerRoomMap.keySet()) {
+            if (player.getWebSocketSession() == session) {
+                return player.getId();
+            }
+        }
+        return -1;
     }
 }

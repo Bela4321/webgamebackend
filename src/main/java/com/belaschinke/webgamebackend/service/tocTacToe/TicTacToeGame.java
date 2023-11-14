@@ -2,8 +2,10 @@ package com.belaschinke.webgamebackend.service.tocTacToe;
 
 import com.belaschinke.webgamebackend.entity.Player;
 import com.belaschinke.webgamebackend.service.GameInterface;
+import com.belaschinke.webgamebackend.service.messageProtocol.GameUpdateResponse;
 import com.belaschinke.webgamebackend.service.messageProtocol.TurnRequest;
 import com.belaschinke.webgamebackend.service.messageProtocol.TurnResponse;
+import com.belaschinke.webgamebackend.service.messageProtocol.TurnResponseUpdateWrapper;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -84,7 +86,7 @@ public class TicTacToeGame implements GameInterface {
         return true;
     }
 
-    public TurnResponse handleTurn(TurnRequest turnRequest) {
+    public TurnResponseUpdateWrapper handleTurn(TurnRequest turnRequest) {
         TurnResponse turnResponse = new TurnResponse();
         turnResponse.setValid(false);
         int playerNumber = turnRequest.getPlayerId() == player1.getId() ? 1 : 2;
@@ -94,21 +96,35 @@ public class TicTacToeGame implements GameInterface {
             turnResponse.setDraw(winner == -1);
             turnResponse.setWin(winner == playerNumber);
             turnResponse.setLose(winner != playerNumber && winner != -1);
-            return turnResponse;
+            return new TurnResponseUpdateWrapper(turnResponse, null);
         }
         //player not in game
         if (turnRequest.getPlayerId() != player1.getId() && turnRequest.getPlayerId() != player2.getId()) {
             turnResponse.setErrorMsg("Player not in this game!");
-            return turnResponse;
+            return new TurnResponseUpdateWrapper(turnResponse, null);
         }
         //wrong turn
-        if (turnRequest.getPlayerId() != turn) {
+        if (playerNumber != turn) {
             turnResponse.setErrorMsg("Not your turn!");
-            return turnResponse;
+            return new TurnResponseUpdateWrapper(turnResponse, null);
         }
 
         play(turnRequest.getX(), turnRequest.getY(), turnResponse);
 
-        return turnResponse;
+        //create update
+        if (!turnResponse.isValid()) {
+            return new TurnResponseUpdateWrapper(turnResponse, null);
+        }
+        GameUpdateResponse gameUpdateResponse = new GameUpdateResponse();
+        gameUpdateResponse.setX(turnRequest.getX());
+        gameUpdateResponse.setY(turnRequest.getY());
+        gameUpdateResponse.setPlayerId(turnRequest.getPlayerId());
+        gameUpdateResponse.setRoomId(-1);//filled in upper layer
+        gameUpdateResponse.setWin(turnResponse.isLose());
+        gameUpdateResponse.setLose(turnResponse.isWin());
+        gameUpdateResponse.setDraw(turnResponse.isDraw());
+        gameUpdateResponse.setGameEnd(winner != 0);
+
+        return new TurnResponseUpdateWrapper(turnResponse, gameUpdateResponse);
     }
 }
