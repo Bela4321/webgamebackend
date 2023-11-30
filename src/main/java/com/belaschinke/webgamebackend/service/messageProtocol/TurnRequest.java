@@ -6,7 +6,7 @@ import lombok.ToString;
 @Data
 @ToString
 public class TurnRequest {
-    private final String MSG_NAME = "TurnRequest";
+    private final String msg_NAME = "TurnRequest";
     private long playerId;
     private String authToken;
     //move

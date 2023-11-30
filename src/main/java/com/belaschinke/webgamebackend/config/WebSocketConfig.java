@@ -4,17 +4,21 @@ import com.belaschinke.webgamebackend.service.GameMessageHandler;
 import com.belaschinke.webgamebackend.service.tocTacToe.TicTacToeGame;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.socket.config.annotation.EnableWebSocket;
-import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
-import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
+import org.springframework.web.socket.config.annotation.*;
 
 @Configuration
 @EnableWebSocket
-public class WebSocketConfig implements WebSocketConfigurer {
+public class WebSocketConfig implements WebSocketConfigurer, WebSocketMessageBrokerConfigurer {
+
 
     @Override
+    public void registerStompEndpoints(StompEndpointRegistry registry) {
+        registry.addEndpoint("/ticTacToe").setAllowedOrigins("http://localhost:5173").withSockJS();
+    }
+    @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(ticTacToeHandler(), "/ticTacToe");
+        registry.addHandler(ticTacToeHandler(), "/ticTacToe")
+                .setAllowedOrigins("http://localhost:5173");
     }
 
     @Bean

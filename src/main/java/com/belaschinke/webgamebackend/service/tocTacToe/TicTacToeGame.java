@@ -47,6 +47,12 @@ public class TicTacToeGame implements GameInterface {
             turnResponse.setWin(winner == turn);
             turnResponse.setLose(winner != turn && winner != -1);
             turnResponse.setDraw(winner == -1);
+            turnResponse.setGameEnd(true);
+        } else {
+            turnResponse.setWin(false);
+            turnResponse.setLose(false);
+            turnResponse.setDraw(false);
+            turnResponse.setGameEnd(false);
         }
         turn = turn == 1 ? 2 : 1;
     }
@@ -88,6 +94,9 @@ public class TicTacToeGame implements GameInterface {
 
     public TurnResponseUpdateWrapper handleTurn(TurnRequest turnRequest) {
         TurnResponse turnResponse = new TurnResponse();
+        //set requested move
+        turnResponse.setX(turnRequest.getX());
+        turnResponse.setY(turnRequest.getY());
         turnResponse.setValid(false);
         int playerNumber = turnRequest.getPlayerId() == player1.getId() ? 1 : 2;
         //game ended

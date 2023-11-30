@@ -98,7 +98,7 @@ public class Lobby<T extends GameInterface> {
         if (roomId == null) {
             return null;
         }
-        Player[] partners = playerRoomMap.entrySet().stream().filter(entry -> entry.getValue() == roomId).map(Map.Entry::getKey).toArray(Player[]::new);
+        Player[] partners = playerRoomMap.entrySet().stream().filter(entry -> Objects.equals(entry.getValue(), roomId)).map(Map.Entry::getKey).toArray(Player[]::new);
         if (partners.length != 2) {
             return null;
         }

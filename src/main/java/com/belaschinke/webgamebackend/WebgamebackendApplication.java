@@ -13,7 +13,6 @@ public class WebgamebackendApplication {
 		//get beans
 		ConfigurableListableBeanFactory bf= context.getBeanFactory();
 
-		System.out.println("Hello World!");
 
 	}
 

@@ -6,8 +6,8 @@ import lombok.ToString;
 @Data
 @ToString
 public class GameUpdateResponse {
-    private final String MSG_NAME = "GameUpdateResponse";
-    private String ErrorMsg;
+    private final String msg_NAME = "GameUpdateResponse";
+    private String errorMsg = "";
     //turn
     private int x;
     private int y;
