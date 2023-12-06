@@ -13,12 +13,12 @@ public class WebSocketConfig implements WebSocketConfigurer, WebSocketMessageBro
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ticTacToe").setAllowedOrigins("http://localhost:5173").withSockJS();
+        registry.addEndpoint("/ticTacToe").setAllowedOrigins("*").withSockJS();
     }
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(ticTacToeHandler(), "/ticTacToe")
-                .setAllowedOrigins("http://localhost:5173");
+                .setAllowedOrigins("*");
     }
 
     @Bean
