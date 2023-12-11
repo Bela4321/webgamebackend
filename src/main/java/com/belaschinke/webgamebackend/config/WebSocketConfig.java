@@ -4,6 +4,7 @@ import com.belaschinke.webgamebackend.service.GameMessageHandler;
 import com.belaschinke.webgamebackend.service.tocTacToe.TicTacToeGame;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.*;
 
@@ -26,6 +27,10 @@ public class WebSocketConfig implements WebSocketConfigurer, WebSocketMessageBro
     public void configureMessageBroker(MessageBrokerRegistry config) {
         config.enableSimpleBroker("/topic");
         config.setApplicationDestinationPrefixes( "/app");
+    }
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(new WebSocketLoggingInterceptor());
     }
 
     @Bean

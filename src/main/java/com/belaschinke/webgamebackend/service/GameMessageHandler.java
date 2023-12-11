@@ -3,6 +3,8 @@ package com.belaschinke.webgamebackend.service;
 import com.belaschinke.webgamebackend.service.messageProtocol.InitialResponse;
 import com.belaschinke.webgamebackend.service.messageProtocol.MessageSorter;
 import com.belaschinke.webgamebackend.service.messageProtocol.TurnResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.socket.*;
 
@@ -10,6 +12,8 @@ public class GameMessageHandler<T extends GameInterface> implements WebSocketHan
 
     @Autowired
     WebgameService<T> webgameService;
+    //logger
+    private static final Logger logger = LoggerFactory.getLogger(GameMessageHandler.class);
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -18,6 +22,8 @@ public class GameMessageHandler<T extends GameInterface> implements WebSocketHan
 
     @Override
     public void handleMessage(WebSocketSession session, WebSocketMessage<?> message) throws Exception {
+        //log message
+        logger.info("Message received: " + message.getPayload());
         //prep Message
         if (!(message.getPayload() instanceof String)) {
             throw new Exception("Invalid message type!");
