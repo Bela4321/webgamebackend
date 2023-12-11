@@ -47,7 +47,7 @@ public class WebSocketConfig implements WebSocketConfigurer, WebSocketMessageBro
 
     // Bean to register the connect event listener
     @Bean
-    public ApplicationListener<SessionConnectEvent> webSocketConnectEventListener() {
+    public ApplicationListener<SessionConnectEvent> myWebSocketConnectEventListener() {
         return new WebSocketConnectEventListener();
     }
 
